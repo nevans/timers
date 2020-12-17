@@ -34,6 +34,7 @@ module Timers
 
 			# The absolute time that the handle should be fired at.
 			attr_reader :time
+			alias to_f time
 
 			# Cancel this timer, O(1).
 			def cancel!
@@ -53,10 +54,6 @@ module Timers
 
 			def >= other
 				@time >= other.to_f
-			end
-
-			def to_f
-				@time
 			end
 
 			# Fire the callback if not cancelled with the given time parameter.
@@ -112,7 +109,7 @@ module Timers
 			while handle = @queue.pop
 				next if handle.cancelled?
 				
-				index = bisect_right(@sequence, handle)
+				index = @sequence.bsearch_index {|x| handle.to_f > x.to_f } || @sequence.length
 				
 				if current_handle = @sequence[index] and current_handle.cancelled?
 					# puts "Replacing handle at index: #{index} due to cancellation in array containing #{@sequence.size} item(s)."
@@ -124,20 +121,5 @@ module Timers
 			end
 		end
 
-		# Return the right-most index where to insert item e, in a list a, assuming
-		# a is sorted in descending order.
-		def bisect_right(a, e, l = 0, u = a.length)
-			while l < u
-				m = l + (u - l).div(2)
-
-				if a[m] >= e
-					l = m + 1
-				else
-					u = m
-				end
-			end
-
-			l
-		end
 	end
 end
